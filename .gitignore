@@ -63,7 +63,23 @@ public
 
 # Yarn
 yarn-error.log
+
+dist
+package-lock.json
+node_modules
+.idea
+.vscode
+*.log
+yarn.lock
 .pnp/
 .pnp.js
 # Yarn Integrity file
 .yarn-integrity
+.env*
+dist
+package-lock.json
+node_modules
+.idea
+.vscode
+*.log
+yarn.lock
