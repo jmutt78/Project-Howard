@@ -1,43 +1,20 @@
-const { GraphQLServer } = require('graphql-yoga')
-const { prisma } = require('./generated/prisma-client')
+require("dotenv").config({ path: ".env" });
+const createServer = require("./createServer");
+const db = require("./db");
 
-const resolvers = {
-  Query: {
-    feed: (parent, args, context) => {
-      return context.prisma.posts({ where: { published: true } })
-    },
-    drafts: (parent, args, context) => {
-      return context.prisma.posts({ where: { published: false } })
-    },
-    post: (parent, { id }, context) => {
-      return context.prisma.post({ id })
-    },
-  },
-  Mutation: {
-    createDraft(parent, { title, content }, context) {
-      return context.prisma.createPost({
-        title,
-        content,
-      })
-    },
-    deletePost(parent, { id }, context) {
-      return context.prisma.deletePost({ id })
-    },
-    publish(parent, { id }, context) {
-      return context.prisma.updatePost({
-        where: { id },
-        data: { published: true },
-      })
-    },
-  },
-}
+const server = createServer();
 
-const server = new GraphQLServer({
-  typeDefs: './src/schema.graphql',
-  resolvers,
-  context: {
-    prisma,
-  },
-})
+// TODO Use express middlware to handle cookies (JWT)
+// TODO Use express middlware to populate current user
 
-server.start(() => console.log('Server is running on http://localhost:4000'))
+server.start(
+  {
+    cors: {
+      credentials: true,
+      origin: process.env.FRONTEND_URL
+    }
+  },
+  deets => {
+    console.log(`Server is now running on port http:/localhost:${deets.port}`);
+  }
+);

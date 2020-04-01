@@ -1,18 +1,7 @@
-type Query {
-  feed: [Post!]!
-  drafts: [Post!]!
-  post(id: ID!): Post
-}
-
 type Mutation {
-  createDraft(title: String!, content: String): Post
-  deletePost(id: ID!): Post
-  publish(id: ID!): Post
+  hi: String
 }
 
-type Post {
-  id: ID!
-  published: Boolean!
-  title: String!
-  content: String!
+type Query {
+  hi: String
 }
