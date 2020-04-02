@@ -36,6 +36,7 @@ class App extends React.Component {
   };
 
   render() {
+    console.log(this.props);
     const isLanding =
       window.location.pathname === "/" ||
       window.location.pathname === "/signin" ||

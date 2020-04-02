@@ -1,9 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
+import { Mutation } from "react-apollo";
+import gql from "graphql-tag";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
+import Error from "../ErrorMessage";
 import { Form, Input, Button, Checkbox, Divider } from "antd";
 import { Root } from "../Home";
+
+const SIGNUP_MUTATION = gql`
+  mutation SIGNUP_MUTATION($email: String!, $password: String!) {
+    signup(email: $email, password: $password) {
+      id
+      email
+    }
+  }
+`;
 
 export const FormWrapper = styled.div`
   width: 500px;
@@ -104,65 +116,72 @@ const tailLayout = {
 };
 
 export default () => {
-  const onFinish = values => {
-    console.log("Success:", values);
-  };
+  const [inputs, setInputs] = useState();
 
   const onFinishFailed = errorInfo => {
     console.log("Failed:", errorInfo);
   };
+  console.log(inputs);
   return (
-    <Root>
-      <FormWrapper>
-        <Title>
-          <h1>Sign Up Free!</h1>
-        </Title>
-        <Form
-          name="basic"
-          initialValues={{
-            remember: true
-          }}
-          onFinish={onFinish}
-          onFinishFailed={onFinishFailed}
-        >
-          <Form.Item
-            name="username"
-            rules={[
-              {
-                required: true,
-                message: "Please input your username!"
-              }
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            rules={[
-              {
-                required: true,
-                message: "Please input your password!"
-              }
-            ]}
-          >
-            <Input.Password />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              className="ant-btn ant-btn-primary ant-btn-lg ant-btn-block"
-              htmlType="submit"
+    <Mutation mutation={SIGNUP_MUTATION} variables={inputs}>
+      {(signup, { error, loading }) => (
+        <Root>
+          <FormWrapper>
+            <Title>
+              <h1>Sign Up Free!</h1>
+            </Title>
+            <Error error={error} />
+            <Form
+              name="basic"
+              initialValues={{
+                remember: true
+              }}
+              onFinish={async values => {
+                setInputs(values);
+                await signup();
+              }}
+              onFinishFailed={onFinishFailed}
             >
-              Submit
-            </Button>
-          </Form.Item>
-        </Form>
-        <Divider>or</Divider>
-        <CreateAccountWrapper>
-          <Link to="/">Already have an account? Sign in.</Link>
-        </CreateAccountWrapper>
-      </FormWrapper>
-    </Root>
+              <Form.Item
+                name="email"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input your username!"
+                  }
+                ]}
+              >
+                <Input />
+              </Form.Item>
+
+              <Form.Item
+                name="password"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input your password!"
+                  }
+                ]}
+              >
+                <Input.Password />
+              </Form.Item>
+
+              <Form.Item>
+                <Button
+                  className="ant-btn ant-btn-primary ant-btn-lg ant-btn-block"
+                  htmlType="submit"
+                >
+                  Submit
+                </Button>
+              </Form.Item>
+            </Form>
+            <Divider>or</Divider>
+            <CreateAccountWrapper>
+              <Link to="/">Already have an account? Sign in.</Link>
+            </CreateAccountWrapper>
+          </FormWrapper>
+        </Root>
+      )}
+    </Mutation>
   );
 };

@@ -1,7 +1,20 @@
 type Mutation {
-  hi: String
+  signup(email: String!, password: String!): User!
+  updatePermissions(permissions: [Permission], userId: ID!): User
 }
 
 type Query {
   hi: String
+}
+
+type User {
+  id: ID!
+  email: String!
+  permissions: [Permission!]!
+}
+
+enum Permission {
+  ADMIN
+  USER
+  PERMISSIONUPDATE
 }
