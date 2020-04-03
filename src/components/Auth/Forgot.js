@@ -1,9 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
+import { Mutation } from "react-apollo";
+import gql from "graphql-tag";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { Route } from "react-router-dom";
+
+import Error from "../ErrorMessage";
 
 import { Form, Input, Button, Checkbox, Divider } from "antd";
 import { Root } from "../Home";
+
+const REQUEST_RESET_MUTATION = gql`
+  mutation REQUEST_RESET_MUTATION($email: String!) {
+    requestReset(email: $email) {
+      message
+    }
+  }
+`;
 
 export const FormWrapper = styled.div`
   width: 500px;
@@ -104,6 +117,8 @@ const tailLayout = {
 };
 
 export default () => {
+  const [inputs, setInputs] = useState();
+
   const onFinish = values => {
     console.log("Success:", values);
   };
@@ -112,44 +127,56 @@ export default () => {
     console.log("Failed:", errorInfo);
   };
   return (
-    <Root>
-      <FormWrapper>
-        <Title>
-          <h1>Reset Your Password</h1>
-        </Title>
-        <Form
-          name="basic"
-          initialValues={{
-            remember: true
-          }}
-          onFinish={onFinish}
-          onFinishFailed={onFinishFailed}
-        >
-          <Form.Item
-            name="username"
-            rules={[
-              {
-                required: true,
-                message: "Please input your username!"
-              }
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              className="ant-btn ant-btn-primary ant-btn-lg ant-btn-block"
-              htmlType="submit"
-            >
-              Submit
-            </Button>
-          </Form.Item>
-        </Form>
+    <Mutation mutation={REQUEST_RESET_MUTATION} variables={inputs}>
+      {(reset, { error, loading, called }) => (
+        <Root>
+          <FormWrapper>
+            <Title>
+              <h1>Reset Your Password</h1>
+            </Title>
+            <Error error={error} />
+            {!error && !loading && called && (
+              <p>Success! Check your email for a reset link!</p>
+            )}
+            <Route
+              render={({ history }) => (
+                <Form
+                  name="basic"
+                  onFinish={async values => {
+                    setInputs(values);
 
-        <CreateAccountWrapper>
-          <Link to="/">Cancel.</Link>
-        </CreateAccountWrapper>
-      </FormWrapper>
-    </Root>
+                    await reset();
+                  }}
+                  onFinishFailed={onFinishFailed(error)}
+                >
+                  <Form.Item
+                    name="email"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please input your username!"
+                      }
+                    ]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item>
+                    <Button
+                      className="ant-btn ant-btn-primary ant-btn-lg ant-btn-block"
+                      htmlType="submit"
+                    >
+                      Submit
+                    </Button>
+                  </Form.Item>
+                </Form>
+              )}
+            />
+            <CreateAccountWrapper>
+              <Link to="/">Cancel.</Link>
+            </CreateAccountWrapper>
+          </FormWrapper>
+        </Root>
+      )}
+    </Mutation>
   );
 };

@@ -18,12 +18,14 @@ const httpLink = new HttpLink({
 
 const middlewareLink = new ApolloLink((operation, forward) => {
   // get the authentication token from local storage if it exists
-  const tokenValue = localStorage.getItem(AUTH_TOKEN);
-  // return the headers to the context so httpLink can read them
+
   operation.setContext({
-    headers: {
-      Authorization: tokenValue ? `Bearer ${tokenValue}` : ""
+    fetchOptions: {
+      credentials: "include"
     }
+    // headers: {
+    //   Authorization: tokenValue ? `Bearer ${tokenValue}` : ""
+    // }
   });
   return forward(operation);
 });
@@ -62,7 +64,13 @@ const token = localStorage.getItem(AUTH_TOKEN);
 
 ReactDOM.render(
   <ApolloProvider client={client}>
-    <App token={token} />
+    <App />
   </ApolloProvider>,
   document.getElementById("root")
 );
+
+// operation.setContext({
+//   headers: {
+//     Authorization: tokenValue ? `Bearer ${tokenValue}` : ""
+//   }
+// });

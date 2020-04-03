@@ -1,8 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
+import { Mutation } from "react-apollo";
+import gql from "graphql-tag";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { Route } from "react-router-dom";
+
+import Error from "../ErrorMessage";
 
 import { Form, Input, Button, Checkbox, Divider } from "antd";
+
+const SIGNIN_MUTATION = gql`
+  mutation SIGNIN_MUTATION($email: String!, $password: String!) {
+    signin(email: $email, password: $password) {
+      id
+      email
+    }
+  }
+`;
 
 export const Wrapper = styled.div`
   width: 500px;
@@ -103,70 +117,80 @@ const tailLayout = {
 };
 
 export default () => {
-  const onFinish = values => {
-    console.log("Success:", values);
+  const [inputs, setInputs] = useState();
+
+  const onFinishFailed = error => {
+    console.log("Failed:", error);
   };
 
-  const onFinishFailed = errorInfo => {
-    console.log("Failed:", errorInfo);
-  };
   return (
-    <Wrapper>
-      <Title>
-        <h1>Sign In</h1>
-      </Title>
-      <Form
-        name="basic"
-        initialValues={{
-          remember: true
-        }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-      >
-        <Form.Item
-          name="username"
-          rules={[
-            {
-              required: true,
-              message: "Please input your username!"
-            }
-          ]}
-        >
-          <Input />
-        </Form.Item>
+    <Mutation mutation={SIGNIN_MUTATION} variables={inputs}>
+      {(signin, { error, loading }) => (
+        <Wrapper>
+          <Title>
+            <h1>Sign In</h1>
+          </Title>
+          <Error error={error} />
+          <Route
+            render={({ history }) => (
+              <Form
+                name="basic"
+                onFinish={async values => {
+                  setInputs(values);
 
-        <Form.Item
-          name="password"
-          rules={[
-            {
-              required: true,
-              message: "Please input your password!"
-            }
-          ]}
-        >
-          <Input.Password />
-        </Form.Item>
+                  await signin();
+                  history.push("/create-daily");
+                }}
+                onFinishFailed={onFinishFailed(error)}
+              >
+                <Form.Item
+                  name="email"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input your username!"
+                    }
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
 
-        <Form.Item name="remember" valuePropName="checked">
-          <Checkbox>Remember me</Checkbox>
-          <Link className="forgot" to="/forgot">
-            Forgot password
-          </Link>
-        </Form.Item>
+                <Form.Item
+                  name="password"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input your password!"
+                    }
+                  ]}
+                >
+                  <Input.Password />
+                </Form.Item>
 
-        <Form.Item>
-          <Button
-            className="ant-btn ant-btn-primary ant-btn-lg ant-btn-block"
-            htmlType="submit"
-          >
-            Submit
-          </Button>
-        </Form.Item>
-      </Form>
-      <Divider>or</Divider>
-      <CreateAccountWrapper>
-        <Link to="/signup">👉 Create an account</Link>
-      </CreateAccountWrapper>
-    </Wrapper>
+                <Form.Item name="remember" valuePropName="checked">
+                  <Checkbox>Remember me</Checkbox>
+                  <Link className="forgot" to="/forgot">
+                    Forgot password
+                  </Link>
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    className="ant-btn ant-btn-primary ant-btn-lg ant-btn-block"
+                    htmlType="submit"
+                  >
+                    Submit
+                  </Button>
+                </Form.Item>
+              </Form>
+            )}
+          />
+          <Divider>or</Divider>
+          <CreateAccountWrapper>
+            <Link to="/signup">👉 Create an account</Link>
+          </CreateAccountWrapper>
+        </Wrapper>
+      )}
+    </Mutation>
   );
 };

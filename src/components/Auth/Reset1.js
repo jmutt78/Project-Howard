@@ -6,14 +6,25 @@ import { Link } from "react-router-dom";
 import { Route } from "react-router-dom";
 
 import Error from "../ErrorMessage";
+import { CURRENT_USER_QUERY } from "./User";
+
 import { Form, Input, Button, Checkbox, Divider } from "antd";
 import { Root } from "../Home";
 
-const SIGNUP_MUTATION = gql`
-  mutation SIGNUP_MUTATION($email: String!, $password: String!) {
-    signup(email: $email, password: $password) {
+const RESET_MUTATION = gql`
+  mutation RESET_MUTATION(
+    $resetToken: String!
+    $password: String!
+    $confirmPassword: String!
+  ) {
+    resetPassword(
+      resetToken: $resetToken
+      password: $password
+      confirmPassword: $confirmPassword
+    ) {
       id
       email
+      name
     }
   }
 `;
@@ -118,58 +129,50 @@ const tailLayout = {
 
 export default props => {
   const [inputs, setInputs] = useState();
+  const [confirmDirty, setconfirmDirty] = useState(false);
 
   const onFinishFailed = errorInfo => {
     console.log("Failed:", errorInfo);
+
+    const compareToFirstPassword = (rule, value, callback) => {
+      const { form } = props;
+      if (value && value !== form.getFieldValue("password")) {
+        callback("Two passwords that you enter is inconsistent!");
+      } else {
+        callback();
+      }
+    };
   };
 
+  // const validateToNextPassword = (rule, value, callback) => {
+  //   const { form } = props;
+  //   if (value && confirmDirty) {
+  //     form.validateFields(["confirm"], { force: true });
+  //   }
+  //   callback();
+  // };
+
   return (
-    <Mutation mutation={SIGNUP_MUTATION} variables={inputs}>
-      {(signup, { error, loading }) => (
+    <Mutation mutation={RESET_MUTATION} variables={inputs}>
+      {(reset, { error, loading, called }) => (
         <Root>
           <FormWrapper>
             <Title>
-              <h1>Sign Up Free!</h1>
+              <h1>Reset Your Password</h1>
             </Title>
-            <Error error={error} />
+            {!error && !loading && called && (
+              <p>Success! Check your email for a reset link!</p>
+            )}
             <Route
               render={({ history }) => (
                 <Form
                   name="basic"
-                  initialValues={{
-                    remember: true
-                  }}
                   onFinish={async values => {
                     setInputs(values);
-                    await signup();
-                    history.push("/create-daily");
+                    await reset();
                   }}
-                  onFinishFailed={onFinishFailed}
+                  onFinishFailed={onFinishFailed(error)}
                 >
-                  <Form.Item
-                    name="email"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please input your username!"
-                      }
-                    ]}
-                  >
-                    <Input />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="password"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please input your password!"
-                      }
-                    ]}
-                  >
-                    <Input.Password />
-                  </Form.Item>
-
                   <Form.Item>
                     <Button
                       className="ant-btn ant-btn-primary ant-btn-lg ant-btn-block"
@@ -181,9 +184,8 @@ export default props => {
                 </Form>
               )}
             />
-            <Divider>or</Divider>
             <CreateAccountWrapper>
-              <Link to="/">Already have an account? Sign in.</Link>
+              <Link to="/">Cancel.</Link>
             </CreateAccountWrapper>
           </FormWrapper>
         </Root>
